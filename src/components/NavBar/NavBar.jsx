@@ -1,18 +1,41 @@
 import React, { useState } from 'react';
 import './NavBar.css';
+import { useFavorites } from '../../context/FavoritesContext';
+import { SearchMovies } from '../../services/api';
 
 export const NavBar = () => {
   const [query, setQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const { favorites } = useFavorites();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    console.log("Search submitted:", query);
-    // You can trigger a parent callback here
+    if (!query.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const result = await SearchMovies(query);
+      if (result.success) {
+        window.dispatchEvent(
+          new CustomEvent('movieSearch', {
+            detail: {
+              searchTerm: query,
+              movies: result.data
+            }
+          })
+        );
+      } else {
+        console.error('Search failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
   }
 
   function onFavouriteOnly() {
-    console.log("Favourite Movies Only clicked");
-    // You can trigger a parent callback here
+    window.dispatchEvent(new CustomEvent('toggleFavorites'));
   }
 
   return (
@@ -25,12 +48,15 @@ export const NavBar = () => {
           placeholder="Search for a movie..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          disabled={isSearching}
         />
-        <button type="submit">Search</button>
+        <button type="submit" disabled={isSearching || !query.trim()}>
+          {isSearching ? 'Searching...' : 'Search'}
+        </button>
       </form>
 
       <button className="navbar-filter-btn" onClick={onFavouriteOnly}>
-        Favourite Movies Only
+        Favorites ({favorites.length})
       </button>
     </nav>
   );

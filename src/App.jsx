@@ -1,9 +1,15 @@
 import { NavBar } from "./components/NavBar/NavBar";
+import MovieCard from "./components/MovieCard";
+import { FavoritesProvider } from "./context/FavoritesContext";
 
 export const App = () => {
   return (
-    <div>
-      <NavBar />
-    </div>
+    <FavoritesProvider>
+      <div>
+        <NavBar />
+        <MovieCard />
+      </div>
+    </FavoritesProvider>
   );
 };
+
